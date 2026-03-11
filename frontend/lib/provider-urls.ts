@@ -13,8 +13,8 @@ export interface ProviderWidgetConfig {
   baseUrl: string;
   /** Whether the widget requires an API key */
   requiresApiKey: boolean;
-  /** Environment variable name for the API key */
-  apiKeyEnvVar?: string;
+  /** The actual API key */
+  apiKey?: string;
   /** Query parameter name for the API key */
   apiKeyParam?: string;
 }
@@ -27,7 +27,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderWidgetConfig> = {
       ? "https://buy.moonpay.com"
       : "https://buy-sandbox.moonpay.com",
     requiresApiKey: true,
-    apiKeyEnvVar: "NEXT_PUBLIC_MOONPAY_API_KEY",
+    apiKey: process.env.NEXT_PUBLIC_MOONPAY_API_KEY,
     apiKeyParam: "apiKey",
   },
   Transak: {
@@ -35,7 +35,7 @@ const PROVIDER_CONFIGS: Record<string, ProviderWidgetConfig> = {
       ? "https://global.transak.com"
       : "https://global-stg.transak.com",
     requiresApiKey: true,
-    apiKeyEnvVar: "NEXT_PUBLIC_TRANSAK_API_KEY",
+    apiKey: process.env.NEXT_PUBLIC_TRANSAK_API_KEY,
     apiKeyParam: "apiKey",
   },
   "Ramp Network": {
@@ -43,12 +43,14 @@ const PROVIDER_CONFIGS: Record<string, ProviderWidgetConfig> = {
       ? "https://app.ramp.network"
       : "https://app.demo.ramp.network",
     requiresApiKey: true,
-    apiKeyEnvVar: "NEXT_PUBLIC_RAMP_API_KEY",
+    apiKey: process.env.NEXT_PUBLIC_RAMP_API_KEY,
     apiKeyParam: "hostApiKey",
   },
   "Mt Pelerin": {
     baseUrl: "https://widget.mtpelerin.com",
-    requiresApiKey: false,
+    requiresApiKey: true,
+    apiKey: process.env.NEXT_PUBLIC_MTPELERIN_API_KEY,
+    apiKeyParam: "_ctkn",
   },
 };
 
@@ -68,17 +70,17 @@ export interface WidgetUrlParams {
 export function buildProviderWidgetUrl(params: WidgetUrlParams): string | null {
   const { provider, amount, currency, walletAddress } = params;
   const config = PROVIDER_CONFIGS[provider];
+  console.log({ config });
 
   if (!config) return null;
 
   // Check API key availability
   let apiKey: string | undefined;
-  if (config.requiresApiKey && config.apiKeyEnvVar) {
-    apiKey = process.env[config.apiKeyEnvVar];
-    if (!apiKey) {
-      // Return a fallback direct link without embed
-      return getProviderFallbackUrl(provider);
-    }
+  if (config.requiresApiKey && config.apiKey) {
+    apiKey = config.apiKey;
+  } else if (config.requiresApiKey && !config.apiKey) {
+    // Return a fallback direct link without embed
+    return getProviderFallbackUrl(provider);
   }
 
   const url = new URL(config.baseUrl);
@@ -122,6 +124,9 @@ export function buildProviderWidgetUrl(params: WidgetUrlParams): string | null {
       break;
 
     case "Mt Pelerin":
+      if (apiKey && config.apiKeyParam) {
+        url.searchParams.set(config.apiKeyParam, apiKey);
+      }
       url.searchParams.set("type", "buy");
       url.searchParams.set("tab", "buy");
       url.searchParams.set("crys", "BTC");
@@ -135,6 +140,8 @@ export function buildProviderWidgetUrl(params: WidgetUrlParams): string | null {
     default:
       return null;
   }
+
+  console.log({ url: url.toString() });
 
   return url.toString();
 }
@@ -159,8 +166,7 @@ export function isProviderConfigured(provider: string): boolean {
   const config = PROVIDER_CONFIGS[provider];
   if (!config) return false;
   if (!config.requiresApiKey) return true; // Mt Pelerin
-  if (!config.apiKeyEnvVar) return false;
-  const key = process.env[config.apiKeyEnvVar];
+  const key = config.apiKey;
   return !!key && !key.startsWith("pk_test_xxxx") && key !== "xxxx";
 }
 

@@ -34,6 +34,7 @@ export default function ProviderModal({
     if (!connected || typeof window === "undefined") return "";
     try {
       const userData = userSession.loadUserData();
+      console.log("userData", userData);
       const network =
         process.env.NEXT_PUBLIC_STACKS_NETWORK === "mainnet"
           ? "mainnet"
@@ -50,7 +51,15 @@ export default function ProviderModal({
 
   // Build widget URL
   const widgetUrl = useMemo(() => {
+    console.log(
+      "walletAddress",
+      walletAddress,
+      quote.provider,
+      amount,
+      currency,
+    );
     if (!walletAddress) return null;
+
     return buildProviderWidgetUrl({
       provider: quote.provider,
       amount,
@@ -60,6 +69,8 @@ export default function ProviderModal({
   }, [quote.provider, amount, currency, walletAddress]);
 
   const fallbackUrl = getProviderFallbackUrl(quote.provider);
+
+  console.log({ widgetUrl, fallbackUrl });
 
   // ─── Details View ──────────────────────────────────────────────────────
 
@@ -217,8 +228,9 @@ export default function ProviderModal({
                 title={`${quote.provider} Buy Widget`}
                 className="w-full h-full border-0"
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                allow="payment; camera"
-                loading="eager"
+                // loading="eager"
+                allow="usb; ethereum; clipboard-write; payment; microphone; camera"
+                loading="lazy"
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">

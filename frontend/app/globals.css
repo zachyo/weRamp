@@ -293,3 +293,7 @@ body {
   z-index: 0;
   border-radius: inherit;
 }
+
+button {
+  cursor: pointer !important;
+}

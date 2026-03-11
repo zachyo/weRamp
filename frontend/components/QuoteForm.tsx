@@ -59,7 +59,7 @@ export default function QuoteForm({ onSubmit, loading }: QuoteFormProps) {
                 step="any"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="input-field pl-8"
+                className="input-field pl-8!"
                 placeholder="200"
               />
             </div>
