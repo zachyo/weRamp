@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { openContractCall } from "@stacks/connect";
-import { isWalletConnected } from "./WalletConnect";
+import { isWalletConnected, userSession } from "./WalletConnect";
 
 interface VerifyDeliveryProps {
   amountSatoshis: number;
@@ -28,7 +28,6 @@ export default function VerifyDelivery({
 
     setStep("fetching");
     try {
-      const { userSession } = require("./WalletConnect");
       const userData = userSession.loadUserData();
       const network =
         process.env.NEXT_PUBLIC_STACKS_NETWORK === "mainnet"
