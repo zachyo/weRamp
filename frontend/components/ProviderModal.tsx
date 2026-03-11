@@ -7,7 +7,7 @@ import {
   getProviderFallbackUrl,
 } from "@/lib/provider-urls";
 import VerifyDelivery from "./VerifyDelivery";
-import { isWalletConnected, userSession } from "./WalletConnect";
+import { isWalletConnected, userSession } from "@/lib/stacks-session";
 
 interface ProviderModalProps {
   quote: ProviderQuote;

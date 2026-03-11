@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { openContractCall } from "@stacks/connect";
-import { isWalletConnected, userSession } from "./WalletConnect";
+import { isWalletConnected, userSession } from "@/lib/stacks-session";
 
 interface VerifyDeliveryProps {
   amountSatoshis: number;
