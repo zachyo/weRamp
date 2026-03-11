@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import nextDynamic from "next/dynamic";
 import QuoteForm from "@/components/QuoteForm";
 import QuoteCard from "@/components/QuoteCard";
 import { ProviderQuote } from "@/lib/aggregator";
+import nextDynamic from "next/dynamic";
 
-// Lazy-load components that depend on @stacks/connect (browser-only)
 const ProviderModal = nextDynamic(() => import("@/components/ProviderModal"), {
   ssr: false,
   loading: () => null,

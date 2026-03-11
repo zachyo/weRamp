@@ -1,7 +1,6 @@
 "use client";
-
-import nextDynamic from "next/dynamic";
 import WaitlistForm from "@/components/WaitlistForm";
+import nextDynamic from "next/dynamic";
 
 const WalletConnect = nextDynamic(() => import("@/components/WalletConnect"), {
   ssr: false,
