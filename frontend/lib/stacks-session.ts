@@ -27,10 +27,7 @@ export function connectWallet(onDone?: () => void) {
   authenticate({
     appDetails: {
       name: "sBTC On-Ramp Aggregator",
-      icon:
-        typeof window !== "undefined"
-          ? window.location.origin + "/favicon.ico"
-          : "",
+      icon: "",
     },
     redirectTo: "/",
     onFinish: () => {
@@ -57,7 +54,7 @@ export function getExpectedNetwork(): StacksNetworkName {
  * Returns null if the user is not signed in or has no address.
  */
 export function getStxAddress(): string | null {
-  if (typeof window === "undefined") return null;
+  if (window && typeof window === "undefined") return null;
   if (!getUserSession().isUserSignedIn()) return null;
   try {
     const userData = getUserSession().loadUserData();
