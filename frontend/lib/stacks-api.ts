@@ -9,19 +9,24 @@ import { uintCV, FungibleConditionCode, Pc } from "@stacks/transactions";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const NETWORK_NAME =
-  process.env.NEXT_PUBLIC_STACKS_NETWORK === "mainnet" ? "mainnet" : "testnet";
+/**
+ * Lazily resolve config so process.env reads happen at call time,
+ * avoiding Vercel/Turbopack module-init timing issues.
+ */
+function getConfig() {
+  const networkName =
+    process.env.NEXT_PUBLIC_STACKS_NETWORK === "mainnet" ? "mainnet" : "testnet";
+  const apiBase =
+    networkName === "mainnet"
+      ? "https://api.hiro.so"
+      : "https://api.testnet.hiro.so";
+  const contractAddress =
+    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
+    "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
+  const contractName = process.env.NEXT_PUBLIC_CONTRACT_NAME || "agg";
+  return { networkName, apiBase, contractAddress, contractName };
+}
 
-const API_BASE =
-  NETWORK_NAME === "mainnet"
-    ? "https://api.hiro.so"
-    : "https://api.testnet.hiro.so";
-
-const CONTRACT_ADDRESS =
-  process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
-  "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
-
-const CONTRACT_NAME = process.env.NEXT_PUBLIC_CONTRACT_NAME || "agg";
 
 // ─── Read: Verification Status ────────────────────────────────────────────────
 
@@ -39,8 +44,9 @@ export async function getVerificationStatus(
   userAddress: string,
 ): Promise<VerificationStatus | null> {
   try {
+    const { apiBase, contractAddress, contractName } = getConfig();
     const res = await fetch(
-      `${API_BASE}/v2/contracts/call-read/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/get-verification-status`,
+      `${apiBase}/v2/contracts/call-read/${contractAddress}/${contractName}/get-verification-status`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,6 +93,7 @@ export function buildInitiateVerificationPayload(
   expectedSbtcSatoshis: number,
   userAddress: string,
 ): ContractCallPayload {
+  const { networkName, contractAddress, contractName } = getConfig();
   const uintArg = uintCV(BigInt(expectedSbtcSatoshis));
   const argHex =
     "0x01" + BigInt(expectedSbtcSatoshis).toString(16).padStart(32, "0");
@@ -95,11 +102,11 @@ export function buildInitiateVerificationPayload(
   const postCondition = Pc.principal(userAddress).willSendEq(1000000).ustx();
 
   return {
-    contractAddress: CONTRACT_ADDRESS,
-    contractName: CONTRACT_NAME,
+    contractAddress,
+    contractName,
     functionName: "initiate-verification",
     functionArgs: [argHex],
-    network: NETWORK_NAME,
+    network: networkName,
     postConditions: [postCondition],
     postConditionMode: "deny", // Secure mode: explicitly deny unexpected transfers
     fee: "2000",
@@ -113,15 +120,16 @@ export function buildInitiateVerificationPayload(
 export function buildConfirmDeliveryPayload(
   txHashHex: string,
 ): ContractCallPayload {
+  const { networkName, contractAddress, contractName } = getConfig();
   const padded = txHashHex.replace("0x", "").padEnd(64, "0").slice(0, 64);
   const bufferArg = "0x02" + "00000020" + padded;
 
   return {
-    contractAddress: CONTRACT_ADDRESS,
-    contractName: CONTRACT_NAME,
+    contractAddress,
+    contractName,
     functionName: "confirm-delivery",
     functionArgs: [bufferArg],
-    network: NETWORK_NAME,
+    network: networkName,
     postConditions: [], // No STX sent by user in this call
     postConditionMode: "deny",
     fee: "2000",

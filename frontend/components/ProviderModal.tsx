@@ -7,7 +7,7 @@ import {
   getProviderFallbackUrl,
 } from "@/lib/provider-urls";
 import VerifyDelivery from "./VerifyDelivery";
-import { isWalletConnected, userSession } from "@/lib/stacks-session";
+import { isWalletConnected, getStxAddress } from "@/lib/stacks-session";
 
 interface ProviderModalProps {
   quote: ProviderQuote;
@@ -32,21 +32,7 @@ export default function ProviderModal({
   // Get wallet address for widget URL
   const walletAddress = useMemo(() => {
     if (!connected || typeof window === "undefined") return "";
-    try {
-      const userData = userSession.loadUserData();
-      console.log("userData", userData);
-      const network =
-        process.env.NEXT_PUBLIC_STACKS_NETWORK === "mainnet"
-          ? "mainnet"
-          : "testnet";
-      return (
-        userData.profile.stxAddress[network] ??
-        userData.profile.stxAddress.mainnet ??
-        ""
-      );
-    } catch {
-      return "";
-    }
+    return getStxAddress() ?? "";
   }, [connected]);
 
   // Build widget URL

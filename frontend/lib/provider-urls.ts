@@ -19,40 +19,54 @@ export interface ProviderWidgetConfig {
   apiKeyParam?: string;
 }
 
-const IS_PRODUCTION = process.env.NEXT_PUBLIC_STACKS_NETWORK === "mainnet";
+/**
+ * Lazily resolve whether we're in production.
+ * Reading process.env at function-call time avoids the Vercel/Turbopack issue
+ * where env vars aren't available yet during module initialisation.
+ */
+function isProduction(): boolean {
+  return process.env.NEXT_PUBLIC_STACKS_NETWORK === "mainnet";
+}
 
-const PROVIDER_CONFIGS: Record<string, ProviderWidgetConfig> = {
-  MoonPay: {
-    baseUrl: IS_PRODUCTION
-      ? "https://buy.moonpay.com"
-      : "https://buy-sandbox.moonpay.com",
-    requiresApiKey: true,
-    apiKey: process.env.NEXT_PUBLIC_MOONPAY_API_KEY,
-    apiKeyParam: "apiKey",
-  },
-  Transak: {
-    baseUrl: IS_PRODUCTION
-      ? "https://global.transak.com"
-      : "https://global-stg.transak.com",
-    requiresApiKey: true,
-    apiKey: process.env.NEXT_PUBLIC_TRANSAK_API_KEY,
-    apiKeyParam: "apiKey",
-  },
-  "Ramp Network": {
-    baseUrl: IS_PRODUCTION
-      ? "https://app.ramp.network"
-      : "https://app.demo.ramp.network",
-    requiresApiKey: true,
-    apiKey: process.env.NEXT_PUBLIC_RAMP_API_KEY,
-    apiKeyParam: "hostApiKey",
-  },
-  "Mt Pelerin": {
-    baseUrl: "https://widget.mtpelerin.com",
-    requiresApiKey: true,
-    apiKey: process.env.NEXT_PUBLIC_MTPELERIN_API_KEY,
-    apiKeyParam: "_ctkn",
-  },
-};
+/**
+ * Build the provider config map on demand so that every `process.env.*` read
+ * happens at call-time, not at module-load time.
+ */
+function getProviderConfigs(): Record<string, ProviderWidgetConfig> {
+  const prod = isProduction();
+  return {
+    MoonPay: {
+      baseUrl: prod
+        ? "https://buy.moonpay.com"
+        : "https://buy-sandbox.moonpay.com",
+      requiresApiKey: true,
+      apiKey: process.env.NEXT_PUBLIC_MOONPAY_API_KEY,
+      apiKeyParam: "apiKey",
+    },
+    Transak: {
+      baseUrl: prod
+        ? "https://global.transak.com"
+        : "https://global-stg.transak.com",
+      requiresApiKey: true,
+      apiKey: process.env.NEXT_PUBLIC_TRANSAK_API_KEY,
+      apiKeyParam: "apiKey",
+    },
+    "Ramp Network": {
+      baseUrl: prod
+        ? "https://app.ramp.network"
+        : "https://app.demo.ramp.network",
+      requiresApiKey: true,
+      apiKey: process.env.NEXT_PUBLIC_RAMP_API_KEY,
+      apiKeyParam: "hostApiKey",
+    },
+    "Mt Pelerin": {
+      baseUrl: "https://widget.mtpelerin.com",
+      requiresApiKey: true,
+      apiKey: process.env.NEXT_PUBLIC_MTPELERIN_API_KEY,
+      apiKeyParam: "_ctkn",
+    },
+  };
+}
 
 // ─── URL Builder ──────────────────────────────────────────────────────────────
 
@@ -68,8 +82,9 @@ export interface WidgetUrlParams {
  * Returns null if the provider requires an API key that isn't configured.
  */
 export function buildProviderWidgetUrl(params: WidgetUrlParams): string | null {
+  console.log({ params });
   const { provider, amount, currency, walletAddress } = params;
-  const config = PROVIDER_CONFIGS[provider];
+  const config = getProviderConfigs()[provider];
   console.log({ config });
 
   if (!config) return null;
@@ -163,7 +178,7 @@ export function getProviderFallbackUrl(provider: string): string | null {
  * Check if a provider has a valid API key configured.
  */
 export function isProviderConfigured(provider: string): boolean {
-  const config = PROVIDER_CONFIGS[provider];
+  const config = getProviderConfigs()[provider];
   if (!config) return false;
   if (!config.requiresApiKey) return true; // Mt Pelerin
   const key = config.apiKey;
@@ -174,5 +189,5 @@ export function isProviderConfigured(provider: string): boolean {
  * Returns the list of all supported providers.
  */
 export function getSupportedProviders(): string[] {
-  return Object.keys(PROVIDER_CONFIGS);
+  return Object.keys(getProviderConfigs());
 }

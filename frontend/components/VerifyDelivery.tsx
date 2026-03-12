@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { openContractCall } from "@stacks/connect";
-import { isWalletConnected, userSession } from "@/lib/stacks-session";
+import {
+  isWalletConnected,
+  getStxAddress,
+  getExplorerChainParam,
+} from "@/lib/stacks-session";
 
 interface VerifyDeliveryProps {
   amountSatoshis: number;
@@ -28,14 +32,12 @@ export default function VerifyDelivery({
 
     setStep("fetching");
     try {
-      const userData = userSession.loadUserData();
-      const network =
-        process.env.NEXT_PUBLIC_STACKS_NETWORK === "mainnet"
-          ? "mainnet"
-          : "testnet";
-      const userAddress =
-        userData.profile.stxAddress[network] ??
-        userData.profile.stxAddress.mainnet;
+      const userAddress = getStxAddress();
+      if (!userAddress) {
+        setErrorMsg("Could not resolve wallet address");
+        setStep("error");
+        return;
+      }
 
       // 1. Get contract call payload from backend
       const res = await fetch("/api/verify/initiate", {
@@ -86,7 +88,7 @@ export default function VerifyDelivery({
         </p>
         {txId && (
           <a
-            href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`}
+            href={`https://explorer.hiro.so/txid/${txId}?chain=${getExplorerChainParam()}`}
             target="_blank"
             rel="noopener noreferrer"
             className="badge badge-success inline-flex mb-4 hover:opacity-80 transition-opacity"

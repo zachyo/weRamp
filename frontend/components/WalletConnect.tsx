@@ -1,47 +1,84 @@
 "use client";
 
-import { useState } from "react";
-import { userSession, connectWallet } from "@/lib/stacks-session";
+import { useState, useEffect } from "react";
+import {
+  userSession,
+  connectWallet,
+  getStxAddress,
+  getExpectedNetwork,
+  isWrongNetwork,
+} from "@/lib/stacks-session";
 
 // ─── UI component ─────────────────────────────────────────────────────────────
 export default function WalletConnect() {
   const [mounted, setMounted] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
+  const [wrongNetwork, setWrongNetwork] = useState(false);
 
-  if (typeof window !== "undefined" && !mounted) {
+  useEffect(() => {
     setMounted(true);
     if (userSession.isUserSignedIn()) {
-      const userData = userSession.loadUserData();
-      setAddress(userData.profile.stxAddress.mainnet);
+      setAddress(getStxAddress());
+      setWrongNetwork(isWrongNetwork());
     }
-  }
+  }, []);
 
   const handleAuthenticate = () => {
     connectWallet(() => {
-      const userData = userSession.loadUserData();
-      setAddress(userData.profile.stxAddress.mainnet);
+      setAddress(getStxAddress());
+      setWrongNetwork(isWrongNetwork());
     });
   };
 
   const disconnect = () => {
     userSession.signUserOut();
     setAddress(null);
+    setWrongNetwork(false);
   };
 
   if (!mounted) return <button className="btn-outline">Connect Wallet</button>;
 
-  if (address) {
+  // ── Wrong network warning ──
+  if (address && wrongNetwork) {
+    const expected = getExpectedNetwork();
     return (
-      <button
-        onClick={disconnect}
-        className="btn-outline border-accent/50 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
-      >
-        {address.substring(0, 5)}...{address.substring(address.length - 4)}
-        <span className="text-xs text-muted ml-2">(Disconnect)</span>
-      </button>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs font-medium animate-fade-up">
+          <span>⚠️</span>
+          <span>
+            Wrong network — switch to{" "}
+            <strong className="uppercase">{expected}</strong>
+          </span>
+        </div>
+        <button
+          onClick={disconnect}
+          className="btn-outline border-red-500/30 hover:bg-red-500/10 text-red-400 text-xs px-3 py-1.5"
+        >
+          Disconnect
+        </button>
+      </div>
     );
   }
 
+  // ── Connected ──
+  if (address) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="badge badge-accent text-[10px] uppercase">
+          {getExpectedNetwork()}
+        </span>
+        <button
+          onClick={disconnect}
+          className="btn-outline border-accent/50 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
+        >
+          {address.substring(0, 5)}...{address.substring(address.length - 4)}
+          <span className="text-xs text-muted ml-2">(Disconnect)</span>
+        </button>
+      </div>
+    );
+  }
+
+  // ── Not connected ──
   return (
     <button onClick={handleAuthenticate} className="btn-outline">
       <svg
