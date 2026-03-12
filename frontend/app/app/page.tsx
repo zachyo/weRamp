@@ -7,10 +7,10 @@ import QuoteCard from "@/components/QuoteCard";
 import { ProviderQuote } from "@/lib/aggregator";
 import nextDynamic from "next/dynamic";
 
-const ProviderModal = nextDynamic(() => import("@/components/ProviderModal"), {
-  ssr: false,
-  loading: () => null,
-});
+// const ProviderModal = nextDynamic(() => import("@/components/ProviderModal"), {
+//   ssr: false,
+//   loading: () => null,
+// });
 
 // const WalletConnect = nextDynamic(() => import("@/components/WalletConnect"), {
 //   ssr: false,
@@ -197,14 +197,14 @@ export default function AppPage() {
       </div>
 
       {/* Provider modal — only renders client-side */}
-      {selectedQuote && lastParams && (
+      {/* {selectedQuote && lastParams && (
         <ProviderModal
           quote={selectedQuote}
           amount={lastParams.amount}
           currency={lastParams.currency}
           onClose={() => setSelectedQuote(null)}
         />
-      )}
+      )} */}
     </div>
   );
 }
