@@ -101,7 +101,7 @@ async function fetchMoonPayQuote(
   currency: string,
   btcPrice: number,
 ): Promise<ProviderQuote> {
-  const apiKey = process.env.NEXT_PUBLIC_MOONPAY_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_MOONPAY_API_KEY || "";
 
   // Attempt real API call
   if (apiKey && !apiKey.startsWith("pk_test_xxxx")) {

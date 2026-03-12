@@ -40,7 +40,7 @@ function getProviderConfigs(): Record<string, ProviderWidgetConfig> {
         ? "https://buy.moonpay.com"
         : "https://buy-sandbox.moonpay.com",
       requiresApiKey: true,
-      apiKey: process.env.NEXT_PUBLIC_MOONPAY_API_KEY,
+      apiKey: process.env.NEXT_PUBLIC_MOONPAY_API_KEY || "",
       apiKeyParam: "apiKey",
     },
     Transak: {
@@ -48,7 +48,7 @@ function getProviderConfigs(): Record<string, ProviderWidgetConfig> {
         ? "https://global.transak.com"
         : "https://global-stg.transak.com",
       requiresApiKey: true,
-      apiKey: process.env.NEXT_PUBLIC_TRANSAK_API_KEY,
+      apiKey: process.env.NEXT_PUBLIC_TRANSAK_API_KEY || "",
       apiKeyParam: "apiKey",
     },
     "Ramp Network": {
@@ -56,13 +56,13 @@ function getProviderConfigs(): Record<string, ProviderWidgetConfig> {
         ? "https://app.ramp.network"
         : "https://app.demo.ramp.network",
       requiresApiKey: true,
-      apiKey: process.env.NEXT_PUBLIC_RAMP_API_KEY,
+      apiKey: process.env.NEXT_PUBLIC_RAMP_API_KEY || "",
       apiKeyParam: "hostApiKey",
     },
     "Mt Pelerin": {
       baseUrl: "https://widget.mtpelerin.com",
       requiresApiKey: true,
-      apiKey: process.env.NEXT_PUBLIC_MTPELERIN_API_KEY,
+      apiKey: process.env.NEXT_PUBLIC_MTPELERIN_API_KEY || "",
       apiKeyParam: "_ctkn",
     },
   };
