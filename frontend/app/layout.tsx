@@ -20,7 +20,8 @@ export default function RootLayout({
       <body className={`${inter.variable} min-h-screen flex flex-col`}>
         {/* We'll add the StacksProvider wrapper here in the future if needed globally, 
             but for now we can just use the Connect button directly since it handles its own state */}
-        <div className="noise-overlay flex-1">{children}</div>
+        {/* <div className="noise-overlay flex-1">{children}</div> */}
+        <div className="">Test</div>
       </body>
     </html>
   );
