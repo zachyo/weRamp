@@ -1,11 +1,6 @@
 "use client";
 import WaitlistForm from "@/components/WaitlistForm";
-import nextDynamic from "next/dynamic";
-
-const WalletConnect = nextDynamic(() => import("@/components/WalletConnect"), {
-  ssr: false,
-  loading: () => null,
-});
+import WalletConnect from "@/components/WalletConnect";
 
 export default function Home() {
   return (
