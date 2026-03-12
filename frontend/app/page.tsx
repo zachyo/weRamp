@@ -2,10 +2,10 @@
 import WaitlistForm from "@/components/WaitlistForm";
 import nextDynamic from "next/dynamic";
 
-// const WalletConnect = nextDynamic(() => import("@/components/WalletConnect"), {
-//   ssr: false,
-//   loading: () => null,
-// });
+const WalletConnect = nextDynamic(() => import("@/components/WalletConnect"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function Home() {
   return (
@@ -20,7 +20,7 @@ export default function Home() {
             sBTC <span className="text-accent-primary">Ramp</span>
           </span>
         </div>
-        {/* <WalletConnect /> */}
+        <WalletConnect />
       </nav>
 
       {/* Hero Section */}
