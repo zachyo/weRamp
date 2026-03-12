@@ -1,3 +1,5 @@
+"use client";
+
 import { AppConfig, UserSession, authenticate } from "@stacks/connect";
 
 // ─── Lazy singleton — avoids touching browser globals at import time ──────────
