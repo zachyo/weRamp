@@ -24,12 +24,12 @@ export default function WalletConnect() {
   //   }
   // }, []);
 
-  // const handleAuthenticate = () => {
-  //   connectWallet(() => {
-  //     setAddress(getStxAddress());
-  //     setWrongNetwork(isWrongNetwork());
-  //   });
-  // };
+  const handleAuthenticate = () => {
+    connectWallet(() => {
+      setAddress(getStxAddress());
+      setWrongNetwork(isWrongNetwork());
+    });
+  };
 
   // const disconnect = () => {
   //   disconnectWallet();
@@ -81,7 +81,7 @@ export default function WalletConnect() {
 
   // // ── Not connected ──
   return (
-    <button onClick={() => {}} className="btn-outline">
+    <button onClick={handleAuthenticate} className="btn-outline">
       <svg
         width="20"
         height="20"
