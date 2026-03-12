@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import {
-  userSession,
+  isWalletConnected,
   connectWallet,
+  disconnectWallet,
   getStxAddress,
   getExpectedNetwork,
   isWrongNetwork,
@@ -17,7 +18,7 @@ export default function WalletConnect() {
 
   useEffect(() => {
     setMounted(true);
-    if (userSession.isUserSignedIn()) {
+    if (isWalletConnected()) {
       setAddress(getStxAddress());
       setWrongNetwork(isWrongNetwork());
     }
@@ -31,7 +32,7 @@ export default function WalletConnect() {
   };
 
   const disconnect = () => {
-    userSession.signUserOut();
+    disconnectWallet();
     setAddress(null);
     setWrongNetwork(false);
   };

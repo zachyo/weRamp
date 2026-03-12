@@ -1,12 +1,25 @@
 import { AppConfig, UserSession, authenticate } from "@stacks/connect";
 
-// ─── Shared session — single source of truth for wallet state ─────────────────
-const appConfig = new AppConfig(["store_write", "publish_data"]);
-export const userSession = new UserSession({ appConfig });
+// ─── Lazy singleton — avoids touching browser globals at import time ──────────
+let _userSession: UserSession | null = null;
+
+function getUserSession(): UserSession {
+  if (!_userSession) {
+    const appConfig = new AppConfig(["store_write", "publish_data"]);
+    _userSession = new UserSession({ appConfig });
+  }
+  return _userSession;
+}
 
 /** Check whether the wallet is currently signed in */
 export function isWalletConnected(): boolean {
-  return userSession.isUserSignedIn();
+  if (typeof window === "undefined") return false;
+  return getUserSession().isUserSignedIn();
+}
+
+/** Disconnect the current wallet session */
+export function disconnectWallet() {
+  getUserSession().signUserOut();
 }
 
 /** Trigger the Stacks wallet authentication flow */
@@ -23,7 +36,7 @@ export function connectWallet(onDone?: () => void) {
     onFinish: () => {
       onDone?.();
     },
-    userSession,
+    userSession: getUserSession(),
   });
 }
 
@@ -44,9 +57,10 @@ export function getExpectedNetwork(): StacksNetworkName {
  * Returns null if the user is not signed in or has no address.
  */
 export function getStxAddress(): string | null {
-  if (!userSession.isUserSignedIn()) return null;
+  if (typeof window === "undefined") return null;
+  if (!getUserSession().isUserSignedIn()) return null;
   try {
-    const userData = userSession.loadUserData();
+    const userData = getUserSession().loadUserData();
     const network = getExpectedNetwork();
     return (
       userData.profile?.stxAddress?.[network] ??

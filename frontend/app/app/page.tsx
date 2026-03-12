@@ -12,10 +12,10 @@ import nextDynamic from "next/dynamic";
 //   loading: () => null,
 // });
 
-// const WalletConnect = nextDynamic(() => import("@/components/WalletConnect"), {
-//   ssr: false,
-//   loading: () => null,
-// });
+const WalletConnect = nextDynamic(() => import("@/components/WalletConnect"), {
+  ssr: false,
+  loading: () => null,
+});
 
 function QuoteSkeleton() {
   return (
@@ -96,7 +96,7 @@ export default function AppPage() {
           >
             Home
           </Link>
-          {/* <WalletConnect /> */}
+          <WalletConnect />
         </div>
       </nav>
 
