@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Providers from "@/components/Providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -18,10 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} min-h-screen flex flex-col`}>
-        {/* We'll add the StacksProvider wrapper here in the future if needed globally, 
-            but for now we can just use the Connect button directly since it handles its own state */}
-        <div className="noise-overlay flex-1">{children}</div>
+        <Providers>
+          <div className="noise-overlay flex-1">{children}</div>
+        </Providers>
       </body>
     </html>
   );
 }
+

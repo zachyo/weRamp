@@ -1,87 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  isWalletConnected,
-  connectWallet,
-  disconnectWallet,
-  getStxAddress,
-  getExpectedNetwork,
-  isWrongNetwork,
-} from "@/lib/stacks-session";
+import { useWallet } from "./WalletProvider";
 
 // ─── UI component ─────────────────────────────────────────────────────────────
 export default function WalletConnect() {
-  const [mounted, setMounted] = useState(false);
-  const [address, setAddress] = useState<string | null>(null);
-  const [wrongNetwork, setWrongNetwork] = useState(false);
+  const { address, connected, wrongNetwork, network, connect, disconnect } =
+    useWallet();
 
-  // useEffect(() => {
-  //   setMounted(true);
-  //   if (isWalletConnected()) {
-  //     setAddress(getStxAddress());
-  //     setWrongNetwork(isWrongNetwork());
-  //   }
-  // }, []);
+  // ── Wrong network warning ──
+  if (connected && wrongNetwork) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs font-medium animate-fade-up">
+          <span>⚠️</span>
+          <span>
+            Wrong network — switch to{" "}
+            <strong className="uppercase">{network}</strong>
+          </span>
+        </div>
+        <button
+          onClick={disconnect}
+          className="btn-outline border-red-500/30 hover:bg-red-500/10 text-red-400 text-xs px-3 py-1.5"
+        >
+          Disconnect
+        </button>
+      </div>
+    );
+  }
 
-  const handleAuthenticate = () => {
-    connectWallet(() => {
-      setAddress(getStxAddress());
-      setWrongNetwork(isWrongNetwork());
-    });
-  };
+  // ── Connected ──
+  if (address) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="badge badge-accent text-[10px] uppercase">
+          {network}
+        </span>
+        <button
+          onClick={disconnect}
+          className="btn-outline border-accent/50 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
+        >
+          {address.substring(0, 5)}...{address.substring(address.length - 4)}
+          <span className="text-xs text-muted ml-2">(Disconnect)</span>
+        </button>
+      </div>
+    );
+  }
 
-  // const disconnect = () => {
-  //   disconnectWallet();
-  //   setAddress(null);
-  //   setWrongNetwork(false);
-  // };
-
-  // if (!mounted) return <button className="btn-outline">Connect Wallet</button>;
-
-  // // ── Wrong network warning ──
-  // if (address && wrongNetwork) {
-  //   const expected = getExpectedNetwork();
-  //   return (
-  //     <div className="flex items-center gap-2">
-  //       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs font-medium animate-fade-up">
-  //         <span>⚠️</span>
-  //         <span>
-  //           Wrong network — switch to{" "}
-  //           <strong className="uppercase">{expected}</strong>
-  //         </span>
-  //       </div>
-  //       <button
-  //         onClick={disconnect}
-  //         className="btn-outline border-red-500/30 hover:bg-red-500/10 text-red-400 text-xs px-3 py-1.5"
-  //       >
-  //         Disconnect
-  //       </button>
-  //     </div>
-  //   );
-  // }
-
-  // // ── Connected ──
-  // if (address) {
-  //   return (
-  //     <div className="flex items-center gap-2">
-  //       <span className="badge badge-accent text-[10px] uppercase">
-  //         {getExpectedNetwork()}
-  //       </span>
-  //       <button
-  //         onClick={disconnect}
-  //         className="btn-outline border-accent/50 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
-  //       >
-  //         {address.substring(0, 5)}...{address.substring(address.length - 4)}
-  //         <span className="text-xs text-muted ml-2">(Disconnect)</span>
-  //       </button>
-  //     </div>
-  //   );
-  // }
-
-  // // ── Not connected ──
+  // ── Not connected ──
   return (
-    <button onClick={handleAuthenticate} className="btn-outline">
+    <button onClick={connect} className="btn-outline">
       <svg
         width="20"
         height="20"
@@ -107,5 +74,4 @@ export default function WalletConnect() {
       Connect Wallet
     </button>
   );
-  // return <>Connect Wallet</>;
 }

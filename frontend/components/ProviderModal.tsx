@@ -7,7 +7,7 @@ import {
   getProviderFallbackUrl,
 } from "@/lib/provider-urls";
 import VerifyDelivery from "./VerifyDelivery";
-import { isWalletConnected, getStxAddress } from "@/lib/stacks-session";
+import { useWallet } from "./WalletProvider";
 
 interface ProviderModalProps {
   quote: ProviderQuote;
@@ -25,15 +25,15 @@ export default function ProviderModal({
   onClose,
 }: ProviderModalProps) {
   const [view, setView] = useState<ModalView>("details");
-  const [connected] = useState(isWalletConnected());
+  const { connected, address } = useWallet();
 
   const satoshis = Math.round(quote.amountOut * 1e8);
 
   // Get wallet address for widget URL
   const walletAddress = useMemo(() => {
     if (!connected || typeof window === "undefined") return "";
-    return getStxAddress() ?? "";
-  }, [connected]);
+    return address ?? "";
+  }, [connected, address]);
 
   // Build widget URL
   const widgetUrl = useMemo(() => {

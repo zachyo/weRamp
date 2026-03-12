@@ -2,11 +2,8 @@
 
 import { useState } from "react";
 import { openContractCall } from "@stacks/connect";
-import {
-  isWalletConnected,
-  getStxAddress,
-  getExplorerChainParam,
-} from "@/lib/stacks-session";
+import { getExplorerChainParam } from "@/lib/stacks-session";
+import { useWallet } from "./WalletProvider";
 
 interface VerifyDeliveryProps {
   amountSatoshis: number;
@@ -19,12 +16,13 @@ export default function VerifyDelivery({
   amountSatoshis,
   onBack,
 }: VerifyDeliveryProps) {
+  const { connected, address } = useWallet();
   const [step, setStep] = useState<Step>("idle");
   const [txId, setTxId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleVerify = async () => {
-    if (!isWalletConnected()) {
+    if (!connected) {
       setErrorMsg("Wallet not connected");
       setStep("error");
       return;
@@ -32,7 +30,7 @@ export default function VerifyDelivery({
 
     setStep("fetching");
     try {
-      const userAddress = getStxAddress();
+      const userAddress = address;
       if (!userAddress) {
         setErrorMsg("Could not resolve wallet address");
         setStep("error");
