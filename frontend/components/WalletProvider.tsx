@@ -7,10 +7,9 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { authenticate, AppConfig, UserSession } from "@stacks/connect";
 
-const appConfig = new AppConfig(["store_write", "publish_data"]);
-export const userSessionInstance = new UserSession({ appConfig });
+// We keep a module-level reference only available on the client
+let userSessionInstance: any = null;
 
 interface WalletContextType {
   connected: boolean;
@@ -37,23 +36,33 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    if (userSessionInstance.isUserSignedIn()) {
-      const userData = userSessionInstance.loadUserData();
-      setAddress(userData.profile.stxAddress.testnet);
-      setConnected(true);
-    } else if (userSessionInstance.isSignInPending()) {
-      userSessionInstance.handlePendingSignIn().then((userData) => {
+    
+    // Dynamically import @stacks/connect on the client to avoid Next.js Turbopack SSR errors
+    import("@stacks/connect").then(({ AppConfig, UserSession }) => {
+      const appConfig = new AppConfig(["store_write", "publish_data"]);
+      userSessionInstance = new UserSession({ appConfig });
+
+      if (userSessionInstance.isUserSignedIn()) {
+        const userData = userSessionInstance.loadUserData();
         setAddress(userData.profile.stxAddress.testnet);
         setConnected(true);
-      });
-    }
+      } else if (userSessionInstance.isSignInPending()) {
+        userSessionInstance.handlePendingSignIn().then((userData: any) => {
+          setAddress(userData.profile.stxAddress.testnet);
+          setConnected(true);
+        });
+      }
+    });
   }, []);
 
-  const connect = () => {
+  const connect = async () => {
+    if (!userSessionInstance) return;
+    const { authenticate } = await import("@stacks/connect");
+    
     authenticate({
       appDetails: {
         name: "weRamp",
-        icon: window.location.origin + "/favicon.ico", // Placeholder icon
+        icon: window.location.origin + "/favicon.ico",
       },
       redirectTo: "/",
       onFinish: () => {
@@ -66,7 +75,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   const disconnect = () => {
-    userSessionInstance.signUserOut();
+    if (userSessionInstance) {
+      userSessionInstance.signUserOut();
+    }
     setAddress(null);
     setConnected(false);
   };
