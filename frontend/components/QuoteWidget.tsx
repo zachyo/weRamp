@@ -1,0 +1,145 @@
+"use client";
+
+import { useState } from "react";
+
+const CURRENCIES = ["USD", "EUR", "GBP"];
+const MOCK_RATE_BTC = 65000;
+
+const PROVIDERS = [
+  { id: "mtpelerin", name: "Mt Pelerin", fee: "0%", time: "~1 min", type: "No-KYC", badge: "Best Rate" },
+  { id: "transfi", name: "TransFi", fee: "1.5%", time: "~3 mins", type: "No-KYC", badge: "" },
+  { id: "ramp", name: "Ramp", fee: "2.9%", time: "~5 mins", type: "Low-KYC", badge: "" },
+];
+
+export default function QuoteWidget() {
+  const [amount, setAmount] = useState<string>("500");
+  const [currency, setCurrency] = useState<string>("USD");
+  const [tab, setTab] = useState<"buy" | "sell">("buy");
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+
+  const parsedAmount = parseFloat(amount) || 0;
+  const sbtcAmount = (parsedAmount / MOCK_RATE_BTC).toFixed(5);
+
+  return (
+    <div className="w-full max-w-lg mx-auto bg-glass-card rounded-4xl p-6 border border-white/10 shadow-2xl relative animate-fade-up overflow-hidden">
+      {/* Background glow for the widget */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
+
+      {selectedProvider === "mtpelerin" ? (
+        <div className="flex flex-col h-full animate-fade-in">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-white">Complete Purchase</h3>
+            <button 
+              onClick={() => setSelectedProvider(null)}
+              className="text-zinc-400 hover:text-white text-sm bg-white/5 px-3 py-1 rounded-full transition-colors"
+            >
+              ← Back
+            </button>
+          </div>
+          {/* Mock Widget Embed */}
+          <div className="w-full h-[400px] bg-black/60 rounded-xl border border-white/10 flex flex-col items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/50 pointer-events-none"></div>
+            <p className="text-zinc-500 font-medium mb-4">Mt Pelerin Widget</p>
+            <div className="w-12 h-12 rounded-full border-t-2 border-primary animate-spin"></div>
+            <p className="text-xs text-zinc-600 mt-4 absolute bottom-4">Simulating iframe embed...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="animate-fade-in">
+          {/* Tabs */}
+          <div className="flex p-1 bg-black/40 rounded-xl mb-6 border border-white/5">
+            <button
+              onClick={() => setTab("buy")}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === "buy" ? "bg-white/10 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"}`}
+            >
+              Buy
+            </button>
+            <button
+              onClick={() => setTab("sell")}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === "sell" ? "bg-white/10 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"}`}
+            >
+              Sell
+            </button>
+          </div>
+
+          {/* Amount Inputs */}
+          <div className="space-y-4 mb-6">
+            <div className="bg-black/40 rounded-2xl p-4 border border-white/5 transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50">
+              <label className="text-xs text-zinc-500 font-medium mb-1 block">You pay</label>
+              <div className="flex items-center justify-between">
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="bg-transparent text-3xl font-semibold text-white focus:outline-none w-full"
+                  placeholder="0.00"
+                />
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="bg-white/10 text-white text-sm font-medium rounded-lg px-3 py-2 border-none focus:ring-0 cursor-pointer appearance-none ml-2"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c} className="bg-zinc-900">{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="bg-black/40 rounded-2xl p-4 border border-white/5">
+              <label className="text-xs text-zinc-500 font-medium mb-1 block">You receive {tab === "buy" ? "(Estimated)" : ""}</label>
+              <div className="flex items-center justify-between">
+                <input
+                  type="text"
+                  value={parsedAmount > 0 ? sbtcAmount : "0.00"}
+                  readOnly
+                  className="bg-transparent text-3xl font-semibold text-white focus:outline-none w-full"
+                />
+                <div className="bg-white/5 text-white flex items-center gap-2 text-sm font-medium rounded-lg px-3 py-2 border border-white/5">
+                  <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-[10px]">₿</div>
+                  sBTC
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quotes Section */}
+          <div className="mb-2">
+            <h4 className="text-sm font-medium text-zinc-400 mb-3 ml-1">Select best route</h4>
+            <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
+              {PROVIDERS.map((provider) => (
+                <button
+                  key={provider.id}
+                  onClick={() => setSelectedProvider(provider.id)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold font-mono">
+                      {provider.name[0]}
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-white">{provider.name}</span>
+                        {provider.badge && (
+                          <span className="text-[10px] font-bold tracking-wider px-1.5 py-0.5 roundedbg-primary/20 text-primary uppercase">
+                            {provider.badge}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-zinc-500">{provider.time} • Fee: {provider.fee}</span>
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col items-end">
+                     <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 mb-1">
+                       {provider.type}
+                     </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
