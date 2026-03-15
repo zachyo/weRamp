@@ -7,9 +7,18 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import type { UserSession } from "@stacks/connect";
 
-// We keep a module-level reference only available on the client
-let userSessionInstance: any = null;
+let userSessionInstance: UserSession | null = null;
+
+const getUserSession = async (): Promise<UserSession> => {
+  if (!userSessionInstance) {
+    const { AppConfig, UserSession } = await import("@stacks/connect");
+    const appConfig = new AppConfig(["store_write", "publish_data"]);
+    userSessionInstance = new UserSession({ appConfig });
+  }
+  return userSessionInstance;
+};
 
 interface WalletContextType {
   connected: boolean;
@@ -36,18 +45,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    
-    // Dynamically import @stacks/connect on the client to avoid Next.js Turbopack SSR errors
-    import("@stacks/connect").then(({ AppConfig, UserSession }) => {
-      const appConfig = new AppConfig(["store_write", "publish_data"]);
-      userSessionInstance = new UserSession({ appConfig });
-
-      if (userSessionInstance.isUserSignedIn()) {
-        const userData = userSessionInstance.loadUserData();
+    getUserSession().then((session) => {
+      if (session.isUserSignedIn()) {
+        const userData = session.loadUserData();
         setAddress(userData.profile.stxAddress.testnet);
         setConnected(true);
-      } else if (userSessionInstance.isSignInPending()) {
-        userSessionInstance.handlePendingSignIn().then((userData: any) => {
+      } else if (session.isSignInPending()) {
+        session.handlePendingSignIn().then((userData) => {
           setAddress(userData.profile.stxAddress.testnet);
           setConnected(true);
         });
@@ -56,28 +60,26 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const connect = async () => {
-    if (!userSessionInstance) return;
     const { authenticate } = await import("@stacks/connect");
-    
+    const session = await getUserSession();
     authenticate({
       appDetails: {
         name: "weRamp",
-        icon: window.location.origin + "/favicon.ico",
+        icon: window.location.origin + "/favicon.ico", // Placeholder icon
       },
       redirectTo: "/",
       onFinish: () => {
-        const userData = userSessionInstance.loadUserData();
+        const userData = session.loadUserData();
         setAddress(userData.profile.stxAddress.testnet);
         setConnected(true);
       },
-      userSession: userSessionInstance,
+      userSession: session,
     });
   };
 
-  const disconnect = () => {
-    if (userSessionInstance) {
-      userSessionInstance.signUserOut();
-    }
+  const disconnect = async () => {
+    const session = await getUserSession();
+    session.signUserOut();
     setAddress(null);
     setConnected(false);
   };
