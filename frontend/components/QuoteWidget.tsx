@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getQuotes, ProviderQuote } from "@/lib/aggregator";
+import { buildProviderWidgetUrl, getProviderFallbackUrl } from "@/lib/provider-urls";
+import { useWallet } from "@/components/WalletProvider";
 
 const CURRENCIES = ["USD", "EUR", "GBP"];
 
@@ -13,6 +15,25 @@ export default function QuoteWidget() {
   
   const [quotes, setQuotes] = useState<ProviderQuote[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const { connected, address } = useWallet();
+
+  const walletAddress = useMemo(() => {
+    if (!connected || typeof window === "undefined") return "";
+    return address ?? "";
+  }, [connected, address]);
+
+  const widgetUrl = useMemo(() => {
+    if (!selectedProvider || !walletAddress) return null;
+    return buildProviderWidgetUrl({
+      provider: selectedProvider.provider,
+      amount: parseFloat(amount) || 0,
+      currency,
+      walletAddress,
+    });
+  }, [selectedProvider, amount, currency, walletAddress]);
+
+  const fallbackUrl = selectedProvider ? getProviderFallbackUrl(selectedProvider.provider) : null;
 
   const parsedAmount = parseFloat(amount) || 0;
   
@@ -72,12 +93,52 @@ export default function QuoteWidget() {
             </div>
           </div>
 
-          {/* Widget Embed Placeholder based on selected provider */}
-          <div className="w-full h-[400px] bg-black/60 rounded-xl border border-white/10 flex flex-col items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-linear-to-b from-transparent to-black/50 pointer-events-none"></div>
-            <p className="text-zinc-500 font-medium mb-4">{selectedProvider.provider} Widget</p>
-            <div className="w-12 h-12 rounded-full border-t-2 border-primary animate-spin"></div>
-            <p className="text-xs text-zinc-600 mt-4 absolute bottom-4">Simulating iframe embed for {selectedProvider.provider}...</p>
+          {/* Widget Area */}
+          <div className="flex-1 relative bg-black/60 rounded-xl border border-white/10 overflow-hidden min-h-[400px]">
+            {widgetUrl ? (
+              <iframe
+                src={widgetUrl}
+                title={`${selectedProvider.provider} Buy Widget`}
+                className="w-full h-full min-h-[400px] border-0"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                allow="usb; ethereum; clipboard-write; payment; microphone; camera"
+                loading="lazy"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full p-8 text-center absolute inset-0">
+                {!connected ? (
+                  <>
+                    <p className="text-3xl mb-4">🔗</p>
+                    <h3 className="text-lg font-bold mb-2 text-white">
+                      Connect Wallet Required
+                    </h3>
+                    <p className="text-sm text-zinc-400 mb-6 max-w-sm">
+                      Please connect your wallet to proceed with purchasing sBTC.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-3xl mb-4">🔑</p>
+                    <h3 className="text-lg font-bold mb-2 text-white">
+                      API Key Not Configured
+                    </h3>
+                    <p className="text-sm text-zinc-400 mb-6 max-w-sm">
+                      The {selectedProvider.provider} widget requires an API key in the environment variables.
+                    </p>
+                    {fallbackUrl && (
+                      <a
+                        href={fallbackUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary"
+                      >
+                        Open {selectedProvider.provider} Directly
+                      </a>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       ) : (

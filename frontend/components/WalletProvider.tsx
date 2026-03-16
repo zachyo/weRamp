@@ -7,13 +7,15 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import type { UserSession } from "@stacks/connect";
+import { authenticate, AppConfig, UserSession } from "@stacks/connect";
 
 let userSessionInstance: UserSession | null = null;
 
-const getUserSession = async (): Promise<UserSession> => {
+const getUserSession = (): UserSession => {
+  if (typeof window === "undefined") {
+    throw new Error("getUserSession() called on the server");
+  }
   if (!userSessionInstance) {
-    const { AppConfig, UserSession } = await import("@stacks/connect");
     const appConfig = new AppConfig(["store_write", "publish_data"]);
     userSessionInstance = new UserSession({ appConfig });
   }
@@ -45,23 +47,27 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    getUserSession().then((session) => {
-      if (session.isUserSignedIn()) {
-        const userData = session.loadUserData();
-        setAddress(userData.profile.stxAddress.testnet);
-        setConnected(true);
-      } else if (session.isSignInPending()) {
-        session.handlePendingSignIn().then((userData) => {
+    if (typeof window !== "undefined") {
+      try {
+        const session = getUserSession();
+        if (session.isUserSignedIn()) {
+          const userData = session.loadUserData();
           setAddress(userData.profile.stxAddress.testnet);
           setConnected(true);
-        });
+        } else if (session.isSignInPending()) {
+          session.handlePendingSignIn().then((userData) => {
+            setAddress(userData.profile.stxAddress.testnet);
+            setConnected(true);
+          });
+        }
+      } catch (e) {
+        console.error("Failed to get user session", e);
       }
-    });
+    }
   }, []);
 
-  const connect = async () => {
-    const { authenticate } = await import("@stacks/connect");
-    const session = await getUserSession();
+  const connect = () => {
+    const session = getUserSession();
     authenticate({
       appDetails: {
         name: "weRamp",
@@ -77,8 +83,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const disconnect = async () => {
-    const session = await getUserSession();
+  const disconnect = () => {
+    const session = getUserSession();
     session.signUserOut();
     setAddress(null);
     setConnected(false);
